@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
+  console.log('Users microservices is running')
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule,{
 
     transport: Transport.NATS,
@@ -14,5 +15,7 @@ async function bootstrap() {
 
   },);
   await app.listen();
+
 }
+
 bootstrap();

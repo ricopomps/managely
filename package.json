@@ -1,7 +1,16 @@
 {
   "dependencies": {
-    "@nestjs/microservices": "^11.1.6",
-    "git": "^0.1.5",
-    "nats": "^2.29.3"
+  "@nestjs/microservices": "^11.1.6",
+  "nats": "^2.29.3"
+},
+  "devDependencies": {
+    "@types/node": "^24.9.1"
+  },
+
+  "compilerOptions": {
+    "watchOptions": {
+      "poll": 1000 
+    }
+
   }
 }

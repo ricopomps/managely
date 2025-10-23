@@ -5,6 +5,7 @@ services:
       - "3000:3000"
     volumes: 
       - ./http-api-gateway/src:/usr/src/app/src
+      - /usr/src/app/node_modules 
     command: npm run start:dev
     environment:
       - PORT=3000
@@ -12,14 +13,15 @@ services:
     build : ./users-microservice
     volumes: 
       - ./users-microservice/src:/usr/src/app/src
+      - /usr/src/app/node_modules 
     command: npm run start:dev
   payments_microservice:
     build : ./payments-microservice
     volumes: 
       - ./payments-microservice/src:/usr/src/app/src
+      - /usr/src/app/node_modules 
     command: npm run start:dev
   nats:
     image: nats
     ports:
       - 4222:4222
-
