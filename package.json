@@ -1,16 +1,22 @@
 {
   "dependencies": {
-  "@nestjs/microservices": "^11.1.6",
-  "nats": "^2.29.3"
-},
-  "devDependencies": {
-    "@types/node": "^24.9.1"
+    "@nestjs/config": "^4.0.2",
+    "@nestjs/microservices": "^11.1.6",
+    "@nestjs/typeorm": "^11.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "nats": "^2.29.3",
+    "pg": "^8.16.3",
+    "psql": "^0.0.1",
+    "typeorm": "^0.3.27"
   },
-
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.10",
+    "@types/node": "^24.10.0"
+  },
   "compilerOptions": {
     "watchOptions": {
-      "poll": 1000 
+      "poll": 1000
     }
-
   }
 }

@@ -15,13 +15,54 @@ services:
       - ./users-microservice/src:/usr/src/app/src
       - /usr/src/app/node_modules 
     command: npm run start:dev
+
+    environment:
+      
+      DB_HOST: postgres               
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}         
+      DB_PASSWORD: ${DB_PASSWORD}     
+      DB_NAME: ${DB_NAME}
+
+      REDIS_HOST: redis          
+      REDIS_PORT: 6379
+
+      NATS_URL: nats:4222             
+
   payments_microservice:
     build : ./payments-microservice
     volumes: 
       - ./payments-microservice/src:/usr/src/app/src
       - /usr/src/app/node_modules 
     command: npm run start:dev
+    environment:
+      NATS_URL: nats://nats:4222
   nats:
     image: nats
     ports:
       - 4222:4222
+
+  # 1 Postgres (Permanent Data)
+  postgres:
+    image: postgres:15
+    container_name: db_user
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Redis (Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: cache_instance
+    restart: always
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

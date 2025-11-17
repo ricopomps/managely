@@ -13,7 +13,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
                 options: {
 
                     //Default port 4222
-                    servers: ['nats://nats']
+                    servers: ['nats://nats:4222']
                 }
 
             }
@@ -32,7 +32,7 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
                 options: {
 
                     //Default port 4222
-                    servers: ['nats://nats']
+                    servers: ['nats://nats:4222']
                 }
 
             }

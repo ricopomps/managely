@@ -1,6 +1,8 @@
-import { Body, Controller,Inject, Post } from "@nestjs/common";
+import { Body, Controller,Delete,Get,Inject, Param, ParseUUIDPipe, Post, Put } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
-import CreateUserDto from "./dtos/CreateUser.dto";
+import UserDto from "./dtos/User.dto";
+
+
 
 @Controller("/users")
 export class UsersController{
@@ -10,11 +12,33 @@ export class UsersController{
     }
 
     @Post()
-    createUser(@Body() createUserDto:CreateUserDto){
+    createUser(@Body() userDto:UserDto){
+        
+        return this.natsClient.send({cmd: 'createUser'},userDto)
+ 
+    }
 
-        console.log(createUserDto)
-        return this.natsClient.send({cmd: 'createUser'},createUserDto)
+    @Get()
+    readUsers(){
+
+        return this.natsClient.send({cmd : 'readUsers'},{})
 
     }
+
+    @Put(':id')
+    editUser(@Param('id',ParseUUIDPipe)userId:string,@Body() userDto:UserDto){
+
+        return this.natsClient.send({cmd:'updateUser'},{userId,userDto})
+
+    }
+
+    @Delete(':id')
+    deleteUser(@Param('id',ParseUUIDPipe) userId:string){
+        
+        return this.natsClient.send({cmd:'deleteUser'},userId)
+
+    }
+
+   
 
 }
