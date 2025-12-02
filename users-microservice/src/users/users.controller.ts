@@ -1,6 +1,7 @@
 import { Controller, Inject, Post } from "@nestjs/common";
 import { EventPattern, MessagePattern, Payload } from "@nestjs/microservices";
-import UserDto from "./dtos/User.dto";
+import CreateUserDto from "./dtos/CreateUser.dto";
+import UpdateUserDto from "./dtos/User.dto";
 import { fromEventPattern } from "rxjs";
 import { UsersMicroService } from "./users.service";
 import { UUID } from "crypto";
@@ -12,7 +13,7 @@ export class UsersMicroserviceController{
     constructor(private usersService: UsersMicroService){}
 
     @MessagePattern({cmd : 'createUser'}) 
-    createUser(@Payload() userDto: UserDto){
+    createUser(@Payload() userDto: CreateUserDto){
        
         return this.usersService.createUser(userDto); 
 
@@ -26,12 +27,11 @@ export class UsersMicroserviceController{
     }
 
 
-
     @MessagePattern({ cmd: 'updateUser' })
-    updateUser(@Payload() data: { userId: string; userDto: UserDto },
-    ) {
+    updateUser(@Payload() data: { userId: string; userDto: UpdateUserDto }) {
   
-    return this.usersService.updateUser(data.userId, data.userDto);
+        return this.usersService.updateUser(data.userId, data.userDto);
+    
     }
 
     @MessagePattern({cmd: 'deleteUser'})
@@ -40,11 +40,12 @@ export class UsersMicroserviceController{
         return this.usersService.deleteUser(id);
 
     }
-    
 
-    @EventPattern('paymentCreated')
-    paymentCreated(@Payload() data:any){
-        console.log(data);
+    
+    @MessagePattern({ cmd: 'readByUsername' })
+    readByUsername(@Payload() username: string) {
+        return this.usersService.readByUsername(username);
     }
+  
 
 }

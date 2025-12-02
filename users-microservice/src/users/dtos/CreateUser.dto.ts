@@ -1,11 +1,17 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
-export default class UpdateUserDto{
+export default class CreateUserDto{
 
     @IsNotEmpty()
     @IsString()
     @MaxLength(32)
     username: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @MinLength(6)
+    @MaxLength(32)
+    password: string;
 
     @IsOptional()
     @IsString()

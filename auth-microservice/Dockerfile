@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instala as dependências, incluindo as de desenvolvimento (necessárias para o 'start:dev')
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # ------------------------------------------------------------------------------------------------------
 # STAGE 2: BUILD - Compilar TypeScript

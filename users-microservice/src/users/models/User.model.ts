@@ -10,6 +10,7 @@ export class User{
         @IsNotEmpty()
         @IsString()
         @MaxLength(32)
+        @Column({unique: true})
         username: string;
     
         @IsNotEmpty()

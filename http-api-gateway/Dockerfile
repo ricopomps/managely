@@ -2,7 +2,7 @@
 # STAGE 1: BASE IMAGE - Instalar Dependências (Cache)
 # Usamos node:18-alpine, conforme o log anterior.
 # ------------------------------------------------------------------------------------------------------
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 WORKDIR /usr/src/app
 
