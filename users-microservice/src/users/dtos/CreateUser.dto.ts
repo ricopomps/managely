@@ -20,6 +20,8 @@ export default class CreateUserDto{
     
     @IsNotEmpty()
     @IsEmail()
-    email: string;  
+    email: string;
 
+    @IsOptional()
+    permissions?: any[];
 }

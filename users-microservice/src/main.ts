@@ -10,19 +10,18 @@ import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   
-  console.log('Users microservices is running')
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule,{
+  const app = await NestFactory.create(AppModule);
 
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
-    options:{
-
+    options: {
       servers: ['nats://nats'],
-
     },
+  });
 
-  },);
+  await app.startAllMicroservices();
   
-  await app.listen();
+  console.log('Users microservice is running');
 
 }
 

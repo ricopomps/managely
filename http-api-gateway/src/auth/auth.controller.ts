@@ -1,6 +1,9 @@
-import { Body, Controller, Post, Inject } from "@nestjs/common";
+import { Body, Controller, Post, Inject, UseGuards } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import LoginDto from "./dtos/Login.dto";
+import { AuthGuard } from "./auth.guard";
+import { Roles } from "./decorators/roles.decorator";
+import { Role } from "./enums/role.enum";
 
 @Controller("/auth")
 export class AuthController {
@@ -12,7 +15,9 @@ export class AuthController {
     }
 
     @Post('validate')
+    @UseGuards(AuthGuard)
+    @Roles(Role.Admin, Role.Manager, Role.Operator)
     validateToken(@Body() body: { token: string }) {
-        return this.natsClient.send({ cmd: 'validateToken' }, body);
+        return this.natsClient.send({ cmd: 'validate-token' }, body);
     }
 }

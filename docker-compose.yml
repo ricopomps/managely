@@ -1,53 +1,53 @@
 services:
   api_gateway:
-    build: ./http-api-gateway
-    ports: 
+    build:
+      context: ./http-api-gateway
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    volumes:
+      - ./http-api-gateway:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
       - "3000:3000"
-    volumes: 
-      - ./http-api-gateway/src:/usr/src/app/src
-      - /usr/src/app/node_modules 
-    command: npm run start:dev
-    environment:
-      - PORT=3000
+    restart: unless-stopped
+
   users_microservice:
-    build : ./users-microservice
-    volumes: 
-      - ./users-microservice/src:/usr/src/app/src
-      - /usr/src/app/node_modules 
+    build:
+      context: ./users-microservice
+      dockerfile: Dockerfile
     command: npm run start:dev
-
     environment:
-      
-      DB_HOST: postgres               
-      DB_PORT: 5432
-      DB_USER: ${DB_USER}         
-      DB_PASSWORD: ${DB_PASSWORD}     
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-
-      REDIS_HOST: redis          
-      REDIS_PORT: 6379
-
-      NATS_URL: nats:4222             
+    depends_on:
+      - postgres
+    volumes:
+      - ./users-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
 
   payments_microservice:
-    build : ./payments-microservice
-    volumes: 
-      - ./payments-microservice/src:/usr/src/app/src
-      - /usr/src/app/node_modules 
+    build:
+      context: ./payments-microservice
+      dockerfile: Dockerfile
     command: npm run start:dev
-    environment:
-      NATS_URL: nats://nats:4222
+    volumes:
+      - ./payments-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
 
   auth_microservice:
-    build: ./auth-microservice
-    volumes:
-      - ./auth-microservice/src:/usr/src/app/src
-      - /usr/src/app/node_modules
+    build:
+      context: ./auth-microservice
+      dockerfile: Dockerfile
     command: npm run start:dev
-    environment:
-      NATS_URL: nats://nats:4222
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      JWT_EXPIRES_IN: 1d
+    volumes:
+      - ./auth-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
 
   nats:
     image: nats
@@ -75,6 +75,60 @@ services:
     restart: always
     ports:
       - "6379:6379"
+
+  products_microservice:
+    build:
+      context: ./products-microservice
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      - postgres
+    volumes:
+      - ./products-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+  inventory_microservice:
+    build:
+      context: ./inventory-microservice
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      - postgres
+    volumes:
+      - ./inventory-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+  sales_microservice:
+    build:
+      context: ./sales-microservice
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      - postgres
+    volumes:
+      - ./sales-microservice:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
 
 volumes:
   postgres_data:

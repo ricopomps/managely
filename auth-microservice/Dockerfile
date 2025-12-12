@@ -23,11 +23,34 @@ COPY . .
 RUN npm run build
 
 # ------------------------------------------------------------------------------------------------------
-# STAGE 3: DEVELOPMENT - Ambiente de Execução em Desenvolvimento
-# IMPORTANTE: Este estágio é usado pelo 'start:dev' e precisa dos arquivos de código-fonte (src/) 
-# e configuração (tsconfig.json) para que o 'nest start --watch' funcione corretamente.
+# STAGE 3: PRODUCTION - Ambiente de Execução Final
+# Este estágio cria a imagem final, contendo apenas o necessário para rodar a aplicação.
 # ------------------------------------------------------------------------------------------------------
-FROM base AS development
+FROM node:20-alpine AS production
 
-# Copia TODO o código-fonte, incluindo tsconfig.json, src/, e nest-cli.json.
+WORKDIR /usr/src/app
+
+# Copia as dependências de produção da imagem 'base'
+COPY --from=base /usr/src/app/node_modules ./node_modules
+COPY package*.json ./
+
+# Copia os arquivos compilados da imagem 'build'
+COPY --from=build /usr/src/app/dist ./dist
+
+# Comando para iniciar a aplicação em modo de produção
+CMD ["npm", "run", "start"]
+
+# ------------------------------------------------------------------------------------------------------
+# STAGE 4: DEVELOPMENT - Ambiente de Desenvolvimento
+# ------------------------------------------------------------------------------------------------------
+FROM node:20-alpine AS development
+
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --legacy-peer-deps
+
 COPY . .
+
+CMD ["npm", "run", "start:dev"]

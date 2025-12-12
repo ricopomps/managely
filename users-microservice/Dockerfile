@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instala as dependências, incluindo as de desenvolvimento (necessárias para o 'start:dev')
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # ------------------------------------------------------------------------------------------------------
 # STAGE 2: BUILD - Compilar TypeScript
@@ -27,7 +27,14 @@ RUN npm run build
 # IMPORTANTE: Este estágio é usado pelo 'start:dev' e precisa dos arquivos de código-fonte (src/) 
 # e configuração (tsconfig.json) para que o 'nest start --watch' funcione corretamente.
 # ------------------------------------------------------------------------------------------------------
-FROM base AS development
+FROM node:20-alpine
 
-# Copia TODO o código-fonte, incluindo tsconfig.json, src/, e nest-cli.json.
+WORKDIR /usr/src/app
+
+COPY package*.json ./
+
+RUN npm install --legacy-peer-deps
+
 COPY . .
+
+CMD ["npm", "run", "start:dev"]

@@ -1,14 +1,27 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
+import { Reflector } from '@nestjs/core';
 import { firstValueFrom } from 'rxjs';
+import { ROLES_KEY } from './decorators/roles.decorator';
+import { Role } from './enums/role.enum';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(@Inject('NATS_SERVICE') private readonly natsClient: ClientProxy) {}
+  constructor(
+    @Inject('NATS_SERVICE') private readonly natsClient: ClientProxy,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const authHeader: string | undefined = request.headers['authorization'] || request.headers['Authorization'];
+    const authHeader: string | undefined =
+      request.headers['authorization'] || request.headers['Authorization'];
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       throw new UnauthorizedException('Missing or invalid Authorization header');
@@ -16,17 +29,29 @@ export class AuthGuard implements CanActivate {
 
     const token = authHeader.substring('Bearer '.length);
 
-    // Validate token via auth-microservice
-    const result = await firstValueFrom(
-      this.natsClient.send({ cmd: 'validateToken' }, { token })
-    );
+    try {
+      const { user } = await firstValueFrom(
+        this.natsClient.send({ cmd: 'validate-token' }, { token }),
+      );
 
-    if (!result || result.valid !== true) {
+      if (!user) {
+        throw new UnauthorizedException('Invalid token');
+      }
+      request.user = user;
+    } catch (error) {
       throw new UnauthorizedException('Invalid token');
     }
 
-    // Attach payload to request for downstream usage
-    request.user = result.payload;
-    return true;
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles) {
+      return true;
+    }
+
+    const { user } = request;
+    return requiredRoles.some((role) => user.roles?.includes(role));
   }
 }

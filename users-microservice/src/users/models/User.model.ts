@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength, MinLength } from "class-validator";
-import { Entity, PrimaryColumn, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Permission } from './Permission.model';
 
 @Entity('users')
 export class User{
@@ -31,4 +32,17 @@ export class User{
         @Column({unique : true})
         email: string;  
 
+        @ManyToMany(() => Permission)
+        @JoinTable({
+          name: 'user_roles',
+          joinColumn: {
+            name: 'user_id',
+            referencedColumnName: 'id',
+          },
+          inverseJoinColumn: {
+            name: 'permission_id',
+            referencedColumnName: 'id',
+          },
+        })
+        permissions: Permission[];
 }

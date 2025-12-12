@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
 import { JwtService } from '@nestjs/jwt';
 import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { lastValueFrom, timeout } from 'rxjs';
 import * as bcrypt from 'bcryptjs';
 import LoginDto from './dtos/Login.dto';
 import AuthResponseDto from './dtos/AuthResponse.dto';
@@ -14,55 +15,56 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
-    
-    const user = await firstValueFrom(
-      this.natsClient.send({ cmd: 'readByUsername' }, loginDto.username)
-    );
+    try {
+      const user$ = this.natsClient
+        .send('readByUsername', loginDto.username)
+        .pipe(timeout(3000));
+      const user = await lastValueFrom(user$);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+      if (!user) throw new RpcException({ status: 401, message: 'User not found' });
 
-    // validate password
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
-    
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+      const ok = await bcrypt.compare(loginDto.password, user.password);
+      if (!ok) throw new RpcException({ status: 401, message: 'Invalid credentials' });
 
-    // Generate JWT token
-    const payload = { 
-      sub: user.id, 
-      username: user.username,
-      email: user.email 
-    };
-    
-    const access_token = await this.jwtService.signAsync(payload);
+      const roles = user.permissions ? user.permissions.map((p) => p.name) : [];
 
-    // Return response withtout password
-    return {
-      access_token,
-      user: {
-        id: user.id,
+      // Generate JWT token
+      const payload = {
+        sub: user.id,
         username: user.username,
         email: user.email,
-        displayName: user.displayName,
-      },
-    };
+        roles: roles, // Add roles to the payload
+      };
+
+      const access_token = await this.jwtService.signAsync(payload);
+
+      // Return response without password
+      return {
+        access_token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          displayName: user.displayName,
+          roles: roles, // Also include roles in the user object
+        },
+      };
+    } catch (err: any) {
+      if (err instanceof RpcException) throw err;
+      if (err?.name === 'TimeoutError') {
+        throw new RpcException({ status: 504, message: 'Users service timeout' });
+      }
+      throw new RpcException({ status: 500, message: err?.message ?? 'Auth login failed' });
+    }
   }
 
   async validateToken(token: string): Promise<any> {
     try {
       const payload = await this.jwtService.verifyAsync(token);
-      return {
-        valid: true,
-        payload,
-      };
+      // The user object for the guard is the payload itself
+      return { user: payload };
     } catch (error) {
-      return {
-        valid: false,
-        error: error.message,
-      };
+      throw new RpcException({ status: 401, message: 'Invalid or expired token' });
     }
   }
 }

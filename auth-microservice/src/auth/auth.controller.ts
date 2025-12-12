@@ -13,7 +13,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  @MessagePattern({ cmd: 'validateToken' })
+  @MessagePattern({ cmd: 'validate-token' })
   async validateToken(@Payload() validateTokenDto: ValidateTokenDto) {
     return this.authService.validateToken(validateTokenDto.token);
   }
