@@ -1,104 +1,172 @@
 # Managely
 
-A microservices-based application built with NestJS, using NATS for inter-service communication, PostgreSQL for data persistence, and Redis for caching.
+Managely is a comprehensive, microservices-based ERP system designed for small to medium-sized manufacturing businesses. It provides tools for managing users, inventory, products, recipes, and sales, all through a unified API.
+
+Built with NestJS, the system uses a NATS message broker for robust inter-service communication, PostgreSQL for persistent data storage, and Docker for containerization.
 
 ## 🏗️ Architecture
 
-This project follows a microservices architecture with the following components:
+This project follows a microservices architecture designed for scalability and separation of concerns:
 
-- **API Gateway** - HTTP REST API entry point (Port 3000)
-- **Users Microservice** - Handles user management operations
-- **Payments Microservice** - Manages payment processing
-- **NATS** - Message broker for inter-service communication (Port 4222)
-- **PostgreSQL** - Primary database (Port 5432)
-- **Redis** - Cache layer (Port 6379)
+-   **API Gateway**: The single entry point for all client requests. It routes traffic to the appropriate downstream service. (Port: 3000)
+-   **Auth Microservice**: Handles user authentication (login) and token validation.
+-   **Users Microservice**: Manages user data, including creation, retrieval, and updates.
+-   **Inventory Microservice**: Tracks raw material stock levels, adjustments, and history.
+-   **Products Microservice**: Manages finished products, their recipes (bill of materials), and production cost calculations.
+-   **Sales Microservice**: Processes sales transactions, calculates profits, and coordinates inventory updates.
+-   **NATS**: A high-performance message broker for asynchronous communication between services. (Port: 4222)
+-   **PostgreSQL**: The primary relational database for all microservices. (Port: 5432)
+-   **Redis**: In-memory data store, typically used for caching and session management. (Port: 6379)
 
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- [Docker](https://www.docker.com/get-started) (v20.10 or higher)
-- [Docker Compose](https://docs.docker.com/compose/install/) (v2.0 or higher)
+-   [Docker](https://www.docker.com/get-started) (v20.10 or higher)
+-   [Docker Compose](https://docs.docker.com/compose/install/) (v2.0 or higher)
 
 ## 🚀 Quick Start
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/ricopomps/managely.git
 cd managely
 ```
 
-### 2. Set up environment variables
+### 2. Set Up Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory by copying the example file. This file will contain your database credentials and other sensitive configurations.
 
 ```bash
+# .env
 # Database Configuration
-DB_HOST=db_user
-DB_USER=postgree
-DB_PASSWORD=9439
-DB_NAME=db_user
+DB_HOST=postgres
+DB_PORT=5432
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=managely_db
+
+# JWT Secret for Auth Service
+JWT_SECRET=your_super_secret_key
 ```
 
-> **Note:** For production, use strong passwords and never commit the `.env` file to version control.
+> **Note:** For production, always use strong, unique passwords and secrets. Never commit the `.env` file to version control.
 
-### 3. Build and start the application
+### 3. Build and Start the Application
+
+Run the following command to build the Docker images and start all services in the background:
 
 ```bash
-docker-compose up --build
+docker compose up -d --build
 ```
 
-Or run in detached mode (background):
+### 4. Verify the Services
+
+Check the status of the running containers:
 
 ```bash
-docker-compose up -d --build
+docker compose ps
 ```
 
-### 4. Verify the services are running
+You should see all services listed with a `running` status.
 
-Check that all containers are up:
+## ⚙️ API Endpoints
 
-```bash
-docker-compose ps
-```
+The API Gateway is available at `http://localhost:3000`.
 
-You should see all services in the "Up" state.
+---
 
-### 5. Access the API
+### 🔑 Authentication
 
-The API Gateway is now available at:
+| Method | Endpoint         | Description              |
+| :----- | :--------------- | :----------------------- |
+| `POST` | `/auth/login`    | Authenticate a user.     |
+| `POST` | `/auth/validate` | Validate a JWT token.    |
 
-```
-http://localhost:3000
-```
+---
 
-#### Example API Endpoints
+### 👤 Users
 
-**Get all users:**
-```bash
-curl http://localhost:3000/users
-```
+| Method   | Endpoint      | Description                |
+| :------- | :------------ | :------------------------- |
+| `POST`   | `/users`      | Create a new user.         |
+| `GET`    | `/users`      | Get a list of all users.   |
+| `PUT`    | `/users/{id}` | Update an existing user.   |
+| `DELETE` | `/users/{id}` | Delete a user.             |
 
-**Create a new user:**
-```bash
-curl -X POST http://localhost:3000/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "password123",
-    "displayName": "John Doe"
-  }'
-```
+---
+
+### 📦 Inventory & Raw Materials
+
+#### Raw Materials
+
+| Method   | Endpoint               | Description                     |
+| :------- | :--------------------- | :------------------------------ |
+| `POST`   | `/raw-materials`       | Create a new raw material.      |
+| `GET`    | `/raw-materials`       | Get all raw materials.          |
+| `GET`    | `/raw-materials/{id}`  | Get a specific raw material.    |
+| `PATCH`  | `/raw-materials/{id}`  | Update a raw material.          |
+| `DELETE` | `/raw-materials/{id}`  | Delete a raw material.          |
+
+#### Inventory
+
+| Method | Endpoint              | Description                               |
+| :----- | :-------------------- | :---------------------------------------- |
+| `GET`  | `/inventory`          | Get current stock levels of all materials.|
+| `POST` | `/inventory/adjust`   | Adjust the stock of a raw material.       |
+| `GET`  | `/inventory/history`  | Get the history of inventory adjustments. |
+
+---
+
+### 🏭 Products & Recipes
+
+| Method   | Endpoint                                  | Description                                      |
+| :------- | :---------------------------------------- | :----------------------------------------------- |
+| `POST`   | `/products`                               | Create a new product.                            |
+| `GET`    | `/products`                               | Get all products.                                |
+| `GET`    | `/products/{id}`                          | Get a specific product.                          |
+| `PATCH`  | `/products/{id}`                          | Update a product.                                |
+| `DELETE` | `/products/{id}`                          | Delete a product.                                |
+| `POST`   | `/products/{id}/recipe`                   | Add a recipe (bill of materials) to a product.   |
+| `GET`    | `/products/{id}/recipe`                   | Get the recipe for a product.                    |
+| `GET`    | `/products/{id}/cost`                     | Calculate the production cost of a product.      |
+| `PATCH`  | `/products/{pId}/recipe/{rmId}`           | Update an item in a product's recipe.            |
+| `DELETE` | `/products/{pId}/recipe/{rmId}`           | Remove an item from a product's recipe.          |
+| `POST`   | `/products/{id}/check-production`         | Check if a certain quantity can be produced.     |
+
+---
+
+### 💰 Sales
+
+| Method | Endpoint       | Description                |
+| :----- | :------------- | :------------------------- |
+| `POST` | `/sales`       | Create a new sale.         |
+| `GET`  | `/sales`       | Get all sales records.     |
+| `GET`  | `/sales/{id}`  | Get a specific sale record.|
 
 ## 🛠️ Development
 
-### View logs
+### View Logs
 
-View logs for all services:
+To view real-time logs for all running services:
 ```bash
-docker-compose logs -f
+docker compose logs -f
 ```
+
+To view logs for a specific service:
+```bash
+docker compose logs -f <service_name>
+# Example: docker compose logs -f api_gateway
+```
+
+### Stop the Application
+
+To stop and remove all running containers:
+```bash
+docker compose down
+```
+
 
 View logs for a specific service:
 ```bash
